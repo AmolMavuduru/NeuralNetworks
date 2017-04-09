@@ -20,6 +20,7 @@ class SimpleNeuralNetwork(object):
 
 
     def forward_propagate(self, X):
+        # This function propagates through the network and squashes the output using the sigmoid activation function.
 
         self.z2 = np.dot(X, self.first_weights)
         self.a2 = self.sigmoid(self.z2)
@@ -27,6 +28,15 @@ class SimpleNeuralNetwork(object):
         yHat = self.sigmoid(self.z3)
 
         return yHat
+
+    def predict(self, X):
+        # This function predicts the ACTUAL values of the output
+
+        self.z2 = np.dot(X, self.first_weights)
+        self.a2 = self.sigmoid(self.z2)
+        self.z3 = np.dot(self.a2, self.second_weights)
+
+        return self.z3
 
     def sigmoidPrime(self, z):
         # Derivative of Sigmoid Activation Function
