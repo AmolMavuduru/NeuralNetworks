@@ -6,15 +6,15 @@ class SimpleNeuralNetwork(object):
 
 
     def __init__(self, num_inputs, hidden_layer_size, num_outputs):
-        self.num_inputs = num_inputs + 1
+        self.num_inputs = num_inputs
         self.num_outputs = num_outputs
         self.hidden_layer_size = hidden_layer_size
 
         self.first_weights = np.random.randn(self.num_inputs, self.hidden_layer_size)
-        self.second_weights = np.random.randn(self.num_inputs, self.hidden_layer_size)
+        self.second_weights = np.random.randn(self.hidden_layer_size, self.num_outputs)
 
 
-    def sigmoid(z):
+    def sigmoid(self, z):
 
         return 1/(1+np.exp(-z))
 
@@ -24,13 +24,19 @@ class SimpleNeuralNetwork(object):
         self.z2 = np.dot(X, self.first_weights)
         self.a2 = self.sigmoid(self.z2)
         self.z3 = np.dot(self.a2, self.second_weights)
-        output = self.sigmoid(self.z3)
+        yHat = self.sigmoid(self.z3)
 
-        return output
+        return yHat
 
-    def sigmodPrime(z):
+    def sigmoidPrime(self, z):
         # Derivative of Sigmoid Activation Function
         return np.exp(-z)/((1+np.exp(-z))**2)
+
+    def costFunction(self, X, y):
+        # Compute cost for given X,y, use weights already stored in class.
+        self.yHat = self.forward_propagate(X)
+        J = 0.5 * sum((y - self.yHat) ** 2)
+        return J
 
     def costFunctionPrime(self, X, y):
 
@@ -42,7 +48,7 @@ class SimpleNeuralNetwork(object):
         delta3 = np.multiply(-(y-self.yHat), self.sigmoidPrime(self.z3))
         dJdW2 = np.dot(self.a2.T, delta3)
 
-        delta2 = np.dot(delta3, self.second_weights.T)*self.sigmodPrime(self.z2)
+        delta2 = np.dot(delta3, self.second_weights.T)*self.sigmoidPrime(self.z2)
         dJdW1 = np.dot(X.T, delta2)
 
         return dJdW1, dJdW2
@@ -54,7 +60,7 @@ class SimpleNeuralNetwork(object):
 
     def setParams(self, params):
         first_weights_start = 0
-        first_weights_end = self.hiddenLayerSize * self.inputLayerSize
+        first_weights_end = self.hidden_layer_size * self.num_inputs
         self.first_weights = np.reshape(params[first_weights_start:first_weights_end], (self.num_inputs, self.hidden_layer_size))
         second_weights_end = first_weights_end + self.hidden_layer_size * self.num_outputs
         self.second_weights = np.reshape(params[first_weights_end:second_weights_end], (self.hidden_layer_size, self.num_outputs))
@@ -90,24 +96,26 @@ class SimpleNeuralNetwork(object):
 
         return numgrad
 
+
   # Separate class for training neural networks
-    class trainer(object):
-        def __init__(self, N):
+class trainer(object):
+
+     def __init__(self, N):
             # Make Local reference to network:
             self.N = N
 
-        def callbackF(self, params):
+     def callbackF(self, params):
             self.N.setParams(params)
             self.J.append(self.N.costFunction(self.X, self.y))
 
-        def costFunctionWrapper(self, params, X, y):
+     def costFunctionWrapper(self, params, X, y):
             self.N.setParams(params)
             cost = self.N.costFunction(X, y)
             grad = self.N.computeGradients(X, y)
 
             return cost, grad
 
-        def train(self, X, y):
+     def train(self, X, y):
             # Make an internal variable for the callback function:
             self.X = X
             self.y = y
@@ -118,8 +126,7 @@ class SimpleNeuralNetwork(object):
             params0 = self.N.getParams()
 
             options = {'maxiter': 200, 'disp': True}
-            _res = optimize.minimize(self.costFunctionWrapper, params0, jac=True, method='BFGS', \
-                                     args=(X, y), options=options, callback=self.callbackF)
+            _res = optimize.minimize(self.costFunctionWrapper, params0, jac=True, method='BFGS', args=(X, y), options=options, callback=self.callbackF)
 
             self.N.setParams(_res.x)
             self.optimizationResults = _res
