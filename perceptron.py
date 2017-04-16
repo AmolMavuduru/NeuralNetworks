@@ -51,7 +51,7 @@ class Perceptron(object):
              errors = 0
 
              for xi, target in zip(X, Y):
-                 update - self.learn_rate * (target - self.predict(xi))
+                 update = self.learn_rate * (target - self.predict(xi))
                  self.w_[1:] += update * xi
                  self.w_[0] += update
                  errors += int(update  != 0.0)
@@ -71,7 +71,7 @@ class Perceptron(object):
          :return: Class label after unit step by applying Heaveside step function to net input.
          """
 
-         # Returns 1 is the net input is greater than 0.0 and -1 otherwise.
+         # Returns 1 is the net input is greater than 0.0 and 0 otherwise.
 
-         return np.where(self.net_input(X) >= 0.0, 1, -1)
+         return np.where(self.net_input(X) >= 0.0, 1, 0)
 
